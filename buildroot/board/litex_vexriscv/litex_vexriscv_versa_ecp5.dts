@@ -7,7 +7,7 @@
 	model = "sifive,hifive-unleashed-a00";
 
 	chosen {
-		bootargs = "mem=128M@0x40000000 rootwait console=hvc0 root=/dev/ram0 init=/sbin/init swiotlb=32";
+		bootargs = "mem=128M@0x40000000 rootwait console=hvc0 root=/dev/ram0 init=/sbin/init swiotlb=2";
 		linux,initrd-start = <0xC0800000>;
 		linux,initrd-end   = <0xC1000000>; // max 8MB ramdisk image
 	};
@@ -68,6 +68,29 @@
 		#size-cells = <0x2>;
 		compatible = "SiFive,FU540G-soc", "fu500-soc", "sifive-soc", "simple-bus";
 		ranges;
+
+		leds {
+			compatible = "gpio-leds";
+			ld0 {
+				label = "litex:yellow:ld0";
+				linux,default-trigger = "heartbeat";
+				gpios = <&led_gpios 0 0>;
+			};
+			ld7 {
+				label = "litex:red:ld7";
+				panic-indicator;
+				gpios = <&led_gpios 7 0>;
+			};
+		}; 
+
+		led_gpios: gpio@f0005000 {
+			compatible = "wd,mbl-gpio", "basic-mmio-gpio";
+			reg = <0x0 0xf0005000 0x0 0x1>;
+			reg-names = "dat";
+			gpio-controller;
+			#gpio-cells = <2>;
+			gpio-line-names = "ld0", "ld1", "ld2", "ld3", "ld4", "ld5", "ld6", "ld7";
+		};
 
 		mac0: mac@f0009800 {
 			compatible = "litex,liteeth";

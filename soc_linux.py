@@ -6,7 +6,7 @@ from migen import *
 
 from litex.soc.interconnect import wishbone
 from litex.soc.integration.soc_core import mem_decoder
-
+from litex.soc.cores.gpio import GPIOOut
 from litex.soc.cores.spi_flash import SpiFlash
 
 # SoCLinux -----------------------------------------------------------------------------------------
@@ -17,6 +17,7 @@ def SoCLinux(soc_cls, **kwargs):
             "ctrl":       0,
             "uart":       2,
             "timer0":     3,
+            "leds_gpo":  10,
         })
         soc_cls.interrupt_map.update({
             "uart":       0,
@@ -62,6 +63,14 @@ def SoCLinux(soc_cls, **kwargs):
                 endianness=self.cpu.endianness)
             self.add_wb_slave(mem_decoder(self.mem_map["spiflash"]), self.spiflash.bus)
             self.add_memory_region("spiflash", self.mem_map["spiflash"] | self.shadow_base, 0x1000000)
+
+        def add_leds(self):
+            # FIXME: how to find total number of LEDs?
+            leds = [self.platform.request("user_led", i) for i in range(8)]
+            leds_gpo = Signal(len(leds))
+            self.submodules.leds_gpo = GPIOOut(leds_gpo)
+            # FIXME: ECP5 Versa LEDs are inverted, but this doesn't apply to all boards
+            self.comb += [leds[i].eq(~leds_gpo[i]) for i in range(len(leds))]
 
         def configure_ethernet(self, local_ip, remote_ip):
             local_ip = local_ip.split(".")

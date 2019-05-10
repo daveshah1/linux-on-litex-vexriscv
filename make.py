@@ -24,7 +24,7 @@ socs = {
 socs_capabilities = {
     "arty":         "serial+ethernet+spiflash",
     "minispartan6": "serial",
-    "versa_ecp5":   "serial+ethernet",
+    "versa_ecp5":   "serial+ethernet+leds",
     "ulx3s":        "serial"
 }
 
@@ -115,6 +115,8 @@ def main():
         soc = SoCLinux(socs[board], **soc_kwargs)
         if "spiflash" in soc_capabilities:
             soc.add_spi_flash()
+        if "leds" in soc_capabilities:
+            soc.add_leds()
         if "ethernet" in soc_capabilities:
             soc.configure_ethernet(local_ip=args.local_ip, remote_ip=args.remote_ip)
         soc.configure_boot()
