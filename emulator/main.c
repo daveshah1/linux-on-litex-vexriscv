@@ -14,8 +14,8 @@
 
 #include "riscv.h"
 
-#define LINUX_IMAGE_BASE 0xC0000000
-#define LINUX_DTB_BASE   0xC1000000
+#define LINUX_IMAGE_BASE 0xc0000000
+#define LINUX_DTB_BASE   0xc1000000
 
 #define max(a,b) \
   ({ __typeof__ (a) _a = (a); \

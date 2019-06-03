@@ -131,6 +131,17 @@ class VersaECP5(Board):
     def load(self):
         os.system("openocd -f prog/ecp5-versa5g.cfg -c \"transport select jtag; init; svf build/versa_ecp5/gateware/top.svf; exit\"")
 
+# TrellisBoard support -------------------------------------------------------------------------------
+
+class TrellisBoard(Board):
+    def __init__(self):
+        from litex.boards.targets import trellisboard
+        Board.__init__(self, trellisboard.EthernetSoC, "serial+ethernet")
+
+    def load(self):
+        os.system("openocd -f prog/trellisboard.cfg -c \"transport select jtag; init; svf build/versa_ecp5/gateware/top.svf; exit\"")
+
+
 # ULX3S support ------------------------------------------------------------------------------------
 
 class ULX3S(Board):
@@ -167,6 +178,7 @@ supported_boards = {
     # Lattice
     "versa_ecp5":   VersaECP5,
     "ulx3s":        ULX3S,
+    "trellisboard":   TrellisBoard,
     # Altera/Intel
     "de0nano":      De0Nano,
 }
@@ -192,7 +204,7 @@ def main():
     for board_name in board_names:
         board = supported_boards[board_name]()
         soc_kwargs = {}
-        if board_name in ["versa_ecp5", "ulx3s"]:
+        if board_name in ["versa_ecp5", "ulx3s", "trellisboard"]:
             soc_kwargs["toolchain"] = "trellis"
         soc = SoCLinux(board.soc_cls, **soc_kwargs)
         if "spiflash" in board.soc_capabilities:

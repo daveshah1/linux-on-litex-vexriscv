@@ -69,9 +69,9 @@ class LinuxSoC(SoCCore):
     SoCCore.mem_map = {
         "rom":          0x00000000,
         "sram":         0x10000000,
-        "emulator_ram": 0x20000000,
-        "main_ram":     0xC0000000,
-        "csr":          0xf0000000,
+        "emulator_ram": 0x18000000,
+        "main_ram":     0xc0000000,
+        "csr":          0xb0000000,
     }
 
     def __init__(self, **kwargs):
@@ -81,7 +81,7 @@ class LinuxSoC(SoCCore):
             cpu_type="vexriscv", cpu_variant="linux",
             with_uart=False,
             integrated_rom_size=0x8000,
-            integrated_main_ram_size=0x02000000, # 32MB
+            integrated_main_ram_size=0x40000000, # 1GB
             integrated_main_ram_init=get_mem_data({
                 "buildroot/Image":         "0x00000000",
                 "buildroot/rootfs.cpio":   "0x00800000",
@@ -118,7 +118,7 @@ def main():
     sim_config.add_module("serial2console", "serial")
 
     print("Compile board device tree...")
-    os.system("dtc -O dtb -o buildroot/rv32.dtb buildroot/board/litex_vexriscv/litex_vexriscv.dts")
+    os.system("dtc -O dtb -o buildroot/rv32.dtb buildroot/board/litex_vexriscv/litex_vexriscv_trellisboard.dts")
 
     soc = LinuxSoC()
     builder = Builder(soc, output_dir="build", csr_csv="csr.csv")

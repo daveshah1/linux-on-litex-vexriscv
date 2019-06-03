@@ -25,11 +25,11 @@ def SoCLinux(soc_cls, **kwargs):
         soc_cls.mem_map = {
             "rom":          0x00000000,
             "sram":         0x10000000,
-            "emulator_ram": 0x20000000,
-            "ethmac":       0x30000000,
-            "spiflash":     0x50000000,
+            "emulator_ram": 0x18000000,
+            "ethmac":       0xa0000000,
+            #"spiflash":     0x50000000,
+            "csr":          0xb0000000,
             "main_ram":     0xc0000000,
-            "csr":          0xf0000000,
         }
 
         def __init__(self, **kwargs):
