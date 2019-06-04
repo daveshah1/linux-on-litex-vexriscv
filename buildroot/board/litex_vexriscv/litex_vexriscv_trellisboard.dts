@@ -7,7 +7,7 @@
 	model = "sifive,hifive-unleashed-a00";
 
 	chosen {
-		bootargs = "mem=1024M@0x40000000 rootwait console=hvc0 root=/dev/ram0 init=/sbin/init swiotlb=32";
+		bootargs = "mem=1024M@0x40000000 rootwait console=hvc0 console=tty0 root=/dev/ram0 init=/sbin/init swiotlb=32";
 		linux,initrd-start = <0xC0800000>;
 		linux,initrd-end   = <0xC1000000>; // max 8MB ramdisk image
 	};
@@ -79,6 +79,16 @@
 			tx-fifo-depth = <2>;
 			rx-fifo-depth = <2>;
 		};
+
+		framebuffer0: framebuffer@f0000000 {
+			compatible = "simple-framebuffer";
+			reg = <0x0 0xf0000000 0x0 0x12C000>;
+			width = <640>;
+			height = <480>;
+			stride = <2560>;
+			format = "a8b8g8r8";
+		};
+
 
 	};
 

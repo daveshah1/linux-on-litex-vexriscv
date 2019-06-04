@@ -3,12 +3,14 @@
 import os
 
 from migen import *
+from migen.fhdl.specials import Tristate
 
 from litex.soc.interconnect import wishbone
 from litex.soc.integration.soc_core import mem_decoder
 
 from litex.soc.cores.spi_flash import SpiFlash
-
+from litex.soc.cores.gpio import GPIOInOut
+from litevideo.output.core import VideoOutCore
 # SoCLinux -----------------------------------------------------------------------------------------
 
 def SoCLinux(soc_cls, **kwargs):
@@ -17,6 +19,8 @@ def SoCLinux(soc_cls, **kwargs):
             "ctrl":       0,
             "uart":       2,
             "timer0":     3,
+            "hdmi_out":   10,
+            "hdmi_iic":   11
         })
         soc_cls.interrupt_map.update({
             "uart":       0,
@@ -75,6 +79,37 @@ def SoCLinux(soc_cls, **kwargs):
             self.add_constant("REMOTEIP2", int(remote_ip[1]))
             self.add_constant("REMOTEIP3", int(remote_ip[2]))
             self.add_constant("REMOTEIP4", int(remote_ip[3]))
+
+        def configure_hdmi(self):
+            hdmi_clock = ClockSignal("init")
+            hdmi_pads = self.platform.request("hdmi")
+            hdmi_out0_dram_port = self.sdram.crossbar.get_port(
+                mode="read",
+                data_width=32,
+                clock_domain="init",
+                reverse=True,
+            )
+            hdmi_out = VideoOutCore(hdmi_out0_dram_port)
+            self.submodules.hdmi_out = hdmi_out
+            self.comb += [
+                hdmi_pads.d.eq(Cat(hdmi_out.source.data[16:24], hdmi_out.source.data[8:16], hdmi_out.source.data[0:8])),
+                hdmi_pads.vsync.eq(~hdmi_out.source.vsync),
+                hdmi_pads.hsync.eq(~hdmi_out.source.hsync),
+                hdmi_pads.de.eq(hdmi_out.source.de),
+                hdmi_pads.clk.eq(hdmi_clock),
+                hdmi_out.source.ready.eq(1)
+            ]
+            led0 = self.platform.request("user_led", 0)
+            self.comb += [led0.eq(hdmi_out.source.vsync)]
+            led1 = self.platform.request("user_led", 1)
+            self.comb += [led1.eq(hdmi_out.source.de)]
+
+            iic_in = Signal(2)
+            iic_out = Signal(2)
+            self.submodules.hdmi_iic = GPIOInOut(iic_in, iic_out)
+
+            self.specials += Tristate(hdmi_pads.sda, 0, ~iic_out[0], iic_in[0])
+            self.specials += Tristate(hdmi_pads.scl, 0, ~iic_out[1], iic_in[1])
 
         def configure_boot(self):
             self.add_constant("NETBOOT_LINUX_VEXRISCV", None)

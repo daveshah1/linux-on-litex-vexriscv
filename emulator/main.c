@@ -385,6 +385,73 @@ static void vexriscv_machine_mode_boot(void) {
 }
 
 /* Main */
+static void i2c_delay(void) {
+    for (volatile int i = 0; i < 5000; i++)
+        ;
+}
+static void set_i2c_io(uint8_t sda, uint8_t scl) {
+    hdmi_iic_out_write((scl & 1) << 1 | sda);
+    i2c_delay();
+}
+
+static uint8_t read_i2c_sda(void) {
+	return hdmi_iic_in_read() & 0x1;
+}
+
+static void i2c_start(void) {
+	set_i2c_io(1, 1);
+	set_i2c_io(0, 1);
+	set_i2c_io(0, 0);
+}
+
+static void i2c_send(uint8_t data) {
+	for (int i = 7; i >= 0; i--) {
+		uint8_t bit = (data >> i) & 0x1;
+		set_i2c_io(bit, 0);
+		set_i2c_io(bit, 1);
+		set_i2c_io(bit, 0);
+	}
+	set_i2c_io(1, 0);
+	set_i2c_io(1, 1);
+	set_i2c_io(1, 0);
+}
+
+static void i2c_stop(void) {
+	set_i2c_io(0, 0);
+	set_i2c_io(0, 1);
+	set_i2c_io(1, 1);
+}
+
+static void tfp410_write(uint8_t address, uint8_t data) {
+    i2c_start();
+    i2c_send(0x70);
+    i2c_send(address);
+    i2c_send(data);
+    i2c_stop();
+}
+
+
+static void hdmi_init(void) {
+	hdmi_out_initiator_hres_write(640);
+	hdmi_out_initiator_vres_write(480);
+
+	hdmi_out_initiator_hsync_start_write(640+16);
+	hdmi_out_initiator_hsync_end_write(640+16+96);
+	hdmi_out_initiator_hscan_write(800);
+
+	hdmi_out_initiator_vsync_start_write(480+10);
+	hdmi_out_initiator_vsync_end_write(480+10+2);
+	hdmi_out_initiator_vscan_write(525);
+
+	hdmi_out_initiator_enable_write(0);
+	hdmi_out_initiator_base_write(0x30000000);
+	hdmi_out_initiator_length_write(640*480*4);
+
+	hdmi_out_initiator_enable_write(1);
+
+	// TFP410: powered on, TMDS enabled, 24-bit, hsync/vsync, falling edge
+	tfp410_write(0x08, 0x35);
+}
 
 int main(void)
 {
@@ -392,6 +459,7 @@ int main(void)
 	irq_setie(1);
 	uart_init();
 	puts("VexRiscv Machine Mode software built "__DATE__" "__TIME__"");
+	hdmi_init();
 	printf("--========== \e[1mBooting Linux\e[0m =============--\n");
 	uart_sync();
 	vexriscv_machine_mode_init();

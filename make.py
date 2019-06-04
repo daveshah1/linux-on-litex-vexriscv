@@ -211,6 +211,7 @@ def main():
             soc.add_spi_flash()
         if "ethernet" in board.soc_capabilities:
             soc.configure_ethernet(local_ip=args.local_ip, remote_ip=args.remote_ip)
+        soc.configure_hdmi()
         soc.configure_boot()
         soc.compile_device_tree(board_name)
 
