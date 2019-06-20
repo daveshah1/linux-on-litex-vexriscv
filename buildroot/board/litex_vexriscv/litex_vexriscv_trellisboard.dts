@@ -7,7 +7,7 @@
 	model = "sifive,hifive-unleashed-a00";
 
 	chosen {
-		bootargs = "mem=1024M@0x40000000 rootwait console=hvc0 console=tty0 root=/dev/ram0 init=/sbin/init swiotlb=32";
+		bootargs = "mem=1024M@0x40000000 rootwait console=hvc0 root=/dev/ram0 init=/sbin/init swiotlb=32";
 		linux,initrd-start = <0xC0800000>;
 		linux,initrd-end   = <0xC1000000>; // max 8MB ramdisk image
 	};
@@ -69,17 +69,17 @@
 		compatible = "SiFive,FU540G-soc", "fu500-soc", "sifive-soc", "simple-bus";
 		ranges;
 
-		mac0: mac@b0009800 {
+		mac0: mac@b0003800 {
 			compatible = "litex,liteeth";
-			reg = <0x0 0xb0009800 0x0 0x7c
-				0x0 0xb0009000 0x0 0x0a
+			reg = <0x0 0xb0003800 0x0 0x7c
+				0x0 0xb0003000 0x0 0x0a
 				0x0 0xa0000000 0x0 0x2000>;
-			interrupts = <0x3>;
-			interrupt-parent = <0x2>;
+			interrupts = <0x2>;
+			interrupt-parent = <0x3>;
 			tx-fifo-depth = <2>;
 			rx-fifo-depth = <2>;
 		};
-
+/*
 		framebuffer0: framebuffer@f0000000 {
 			compatible = "simple-framebuffer";
 			reg = <0x0 0xf0000000 0x0 0x12C000>;
@@ -88,7 +88,7 @@
 			stride = <2560>;
 			format = "a8b8g8r8";
 		};
-
+*/
 
 	};
 
