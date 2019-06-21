@@ -139,7 +139,7 @@ class TrellisBoard(Board):
         Board.__init__(self, trellisboard.EthernetSoC, "serial+ethernet")
 
     def load(self):
-        os.system("openocd -f prog/trellisboard.cfg -c \"transport select jtag; init; svf build/versa_ecp5/gateware/top.svf; exit\"")
+        os.system("openocd -f prog/trellisboard.cfg -c \"transport select jtag; init; svf build/trellisboard/gateware/top.svf; exit\"")
 
 
 # ULX3S support ------------------------------------------------------------------------------------
@@ -212,6 +212,7 @@ def main():
         if "ethernet" in board.soc_capabilities:
             soc.configure_ethernet(local_ip=args.local_ip, remote_ip=args.remote_ip)
         soc.configure_hdmi()
+        soc.configure_ice_gpo()
         soc.configure_boot()
         soc.compile_device_tree(board_name)
 

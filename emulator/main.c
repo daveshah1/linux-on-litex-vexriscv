@@ -70,12 +70,32 @@ static void litex_write_cpu_timer_cmp(uint32_t low, uint32_t high){
     cpu_timer_latch_write(1);
 }
 
+
+static void debug_puts(const char *x) {
+	char c;
+	while ((c = *(x++)))
+		litex_putchar(c);
+}
+
+
 static void litex_stop(void){
 #ifdef CSR_SUPERVISOR_FINISH_ADDR
     supervisor_finish_write(1);
 #endif
+    debug_puts("[emulator] STOP!\n");
 	while(1);
 }
+
+static void debug_stop(const char *x) {
+	debug_puts(x);
+	litex_stop();
+}
+
+#define STRINGIZE(x) STRINGIZE2(x)
+#define STRINGIZE2(x) #x
+#define LINE_STRING STRINGIZE(__LINE__)
+
+#define DEBUG_STOP(msg) debug_stop("[DEBUG_STOP] " __FILE__ ":" LINE_STRING " " msg);
 
 /* VexRiscv Registers / Words access functions */
 
@@ -258,7 +278,7 @@ void vexriscv_machine_mode_trap(void) {
 				csr_set(sip, MIP_STIP);
 				csr_clear(mie, MIE_MTIE);
 			} break;
-			default: litex_stop(); break;
+			default: DEBUG_STOP("INTERRUPT") break;
 		}
 	/* Exception */
 	} else {
@@ -310,7 +330,7 @@ void vexriscv_machine_mode_trap(void) {
 								csr_write(mepc, mepc + 4);
 								csr_write(mtvec, vexriscv_machine_mode_trap_entry); /* Restore MTVEC */
 							} break;
-							default: litex_stop(); break;
+							default: DEBUG_STOP("BAD ATOMIC") break;
 						} break;
 					/* CSR */
 					case 0x73:{
@@ -332,11 +352,11 @@ void vexriscv_machine_mode_trap(void) {
 							case RDCYCLEH :
 							case RDINSTRETH:
 							case RDTIMEH : old = litex_read_cpu_timer_msb(); break;
-							default: litex_stop(); break;
+							default: DEBUG_STOP("BAD CSR") break;
 						}
 						if(write) {
 							switch(csrAddress){
-								default: litex_stop(); break;
+								default: DEBUG_STOP("CSR WRITE") break;
 							}
 						}
 
@@ -344,7 +364,7 @@ void vexriscv_machine_mode_trap(void) {
 						csr_write(mepc, mepc + 4);
 
 					} break;
-					default: litex_stop(); break;
+					default: DEBUG_STOP("ILLINST") break;
 				}
 			} break;
 			/* System call */
@@ -371,7 +391,7 @@ void vexriscv_machine_mode_trap(void) {
 					default: litex_stop(); break;
 				}
 			} break;
-			default: litex_stop(); break;
+			default: DEBUG_STOP("UNKNOWN CAUSE") break;
 		}
 	}
 }
@@ -460,7 +480,7 @@ int main(void)
 	irq_setie(1);
 	uart_init();
 	puts("VexRiscv Machine Mode software built "__DATE__" "__TIME__"");
-	hdmi_init();
+	//hdmi_init();
 	printf("--========== \e[1mBooting Linux\e[0m =============--\n");
 	uart_sync();
 	vexriscv_machine_mode_init();

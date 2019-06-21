@@ -5,11 +5,13 @@ import os
 from migen import *
 from migen.fhdl.specials import Tristate
 
+from litex.build.generic_platform import *
+
 from litex.soc.interconnect import wishbone
 from litex.soc.integration.soc_core import mem_decoder
 
 from litex.soc.cores.spi_flash import SpiFlash
-from litex.soc.cores.gpio import GPIOInOut
+from litex.soc.cores.gpio import GPIOInOut, GPIOOut
 from litevideo.output.core import VideoOutCore
 # SoCLinux -----------------------------------------------------------------------------------------
 
@@ -20,7 +22,8 @@ def SoCLinux(soc_cls, **kwargs):
             "uart":       2,
             "timer0":     3,
             "hdmi_out":   10,
-            "hdmi_iic":   11
+            "hdmi_iic":   11,
+            "ice_gpo":   12
         })
         soc_cls.interrupt_map.update({
             "uart":       0,
@@ -110,6 +113,26 @@ def SoCLinux(soc_cls, **kwargs):
 
             self.specials += Tristate(hdmi_pads.sda, 0, ~iic_out[0], iic_in[0])
             self.specials += Tristate(hdmi_pads.scl, 0, ~iic_out[1], iic_in[1])
+
+        def configure_ice_gpo(self):
+            _ice_ios = [
+                ("ice", 0,
+                    Subsignal("creset", Pins("pmoda:1"), IOStandard("LVCMOS33")),
+                    Subsignal("csn", Pins("pmoda:2"), IOStandard("LVCMOS33")),
+                    Subsignal("sck", Pins("pmoda:3"), IOStandard("LVCMOS33")),
+                    Subsignal("mosi", Pins("pmoda:4"), IOStandard("LVCMOS33")),
+                )
+                
+            ]
+            self.platform.add_extension(_ice_ios)
+            ice = self.platform.request("ice")
+            ice_gpo = Signal(4)
+            self.submodules.ice_gpo = GPIOOut(ice_gpo)
+            self.comb += ice.creset.eq(ice_gpo[0])
+            self.comb += ice.csn.eq(ice_gpo[1])
+            self.comb += ice.sck.eq(ice_gpo[2])
+            self.comb += ice.mosi.eq(ice_gpo[3])
+
 
         def configure_boot(self):
             self.add_constant("NETBOOT_LINUX_VEXRISCV", None)
