@@ -230,7 +230,7 @@ def main():
             builder = Builder(soc, output_dir="build/" + board_name,
                 compile_software=False, compile_gateware=False,
                 csr_json=os.path.join(build_dir, "csr.json"))
-        builder.build()
+        builder.build(synth_mode="yosys")
 
         soc.generate_dts(board_name)
         soc.compile_dts(board_name)
